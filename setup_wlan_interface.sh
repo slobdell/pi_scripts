@@ -1,5 +1,7 @@
 #!/usr/bin/sh
 echo "stopping dhcpcd service"
+# manually setup DHCP
+dhclient eth0
 systemctl stop dhcpcd.service
 airmon-ng check kill
 
