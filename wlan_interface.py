@@ -26,6 +26,24 @@ user = run_command("whoami")
 if user != "root":
     raise ValueError("must run script as root")
 
+
+if len(sys.argv) < 2:
+    raise ValueError("expected input parameter: dongle|pi")
+
+filter_to = sys.argv[1]
+
+CACHE_BASE = "/dev/shm/cached_wlan_interface_%s"
+cache_key = CACHE_BASE % filter_to
+
+try:
+    with open(cache_key, "rb") as f:
+        contents = f.read()
+        print contents
+        sys.exit(0)
+except IOError:
+    # cached value does not exist yet
+    pass
+
 PI_WIFI_DRIVER = "brcmfmac" 
 output = run_command("airmon-ng")
 lines = output.splitlines()
@@ -60,10 +78,6 @@ pi_wlan = wlan_from_int(pi_wifi_interface)
 dongle_wifi_interface = first_interface_not_wlan(interfaces, pi_wlan)
 dongle_wlan = wlan_from_int(dongle_wifi_interface)
 
-if len(sys.argv) < 2:
-    raise ValueError("expected input parameter: dongle|pi")
-
-filter_to = sys.argv[1]
 if filter_to != "dongle" and filter_to != "pi":
     raise ValueError("input should be: dongle|pi")
 
@@ -72,4 +86,7 @@ if filter_to == "dongle":
 else:
     print pi_wlan
 
-
+with open(CACHE_BASE % "dongle", "w+") as f:
+    f.write(dongle_wlan)
+with open(CACHE_BASE % "pi", "w+") as f:
+    f.write(pi_wlan)
